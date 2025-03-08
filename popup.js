@@ -37,6 +37,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const shareOptions = document.querySelectorAll('.share-option');
   const urlShare = document.getElementById('url-share');
   const fileShare = document.getElementById('file-share');
+  const clipboardShare = document.getElementById('clipboard-share');
 
   shareOptions.forEach(option => {
     option.addEventListener('click', () => {
@@ -46,6 +47,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const optionType = option.dataset.option;
       urlShare.classList.toggle('active', optionType === 'url');
       fileShare.classList.toggle('active', optionType === 'file');
+      clipboardShare.classList.toggle('active', optionType === 'clipboard');
     });
   });
 
@@ -259,4 +261,140 @@ document.addEventListener('DOMContentLoaded', () => {
       element.style.display = 'none';
     }, 3000);
   }
+
+  const clipboardShareOption = document.querySelector('[data-option="clipboard"]');
+  const clipboardShareSection = document.getElementById('clipboard-share');
+  const pasteArea = document.getElementById('paste-area');
+  const clipboardPreview = document.getElementById('clipboard-preview');
+  const shareClipboardButton = document.getElementById('share-clipboard');
+  const clipboardStatus = document.getElementById('clipboard-status');
+  const clipboardError = document.getElementById('clipboard-error');
+
+  let clipboardContent = null;
+  let clipboardType = null;
+
+  clipboardShareOption?.addEventListener('click', () => {
+    document.querySelectorAll('.share-option').forEach(opt => opt.classList.remove('active'));
+    document.querySelectorAll('.share-content > div').forEach(div => div.classList.remove('active'));
+    clipboardShareOption.classList.add('active');
+    clipboardShareSection.classList.add('active');
+  });
+
+  pasteArea?.addEventListener('click', async () => {
+    try {
+      // Request clipboard permission first
+      const permissionResult = await navigator.permissions.query({ name: 'clipboard-read' });
+      if (permissionResult.state === 'denied') {
+        throw new Error('Clipboard permission denied');
+      }
+      const items = await navigator.clipboard.read();
+    
+      for (const item of items) {
+        if (item.types.includes('image/png') || item.types.includes('image/jpeg')) {
+          const blob = await item.getType(item.types.find(type => type.startsWith('image/')));
+          clipboardContent = blob;
+          clipboardType = 'image';
+          
+          const img = document.createElement('img');
+          img.src = URL.createObjectURL(blob);
+          img.style.maxWidth = '100%';
+          img.style.borderRadius = '4px';
+          
+          clipboardPreview.innerHTML = '';
+          clipboardPreview.appendChild(img);
+          clipboardPreview.style.display = 'block';
+          shareClipboardButton.style.display = 'block';
+          break;
+        } else if (item.types.includes('text/plain')) {
+          const text = await navigator.clipboard.readText();
+          clipboardContent = text;
+          clipboardType = 'text';
+          
+          clipboardPreview.innerHTML = `<div class="file-item"><div class="file-info"><span class="file-name">${text.substring(0, 50)}${text.length > 50 ? '...' : ''}</span></div></div>`;
+          clipboardPreview.style.display = 'block';
+          shareClipboardButton.style.display = 'block';
+          break;
+        }
+      }
+    } catch (error) {
+      clipboardError.textContent = error.message === 'Clipboard permission denied' ?
+        'Please allow clipboard access in your browser settings' :
+        'Failed to read clipboard content';
+    console.log(error);
+      clipboardError.style.display = 'block';
+      setTimeout(() => {
+        clipboardError.style.display = 'none';
+      }, 3000);
+    }
+  });
+
+  shareClipboardButton?.addEventListener('click', async () => {
+    chrome.storage.sync.get(['webhookUrl', 'username'], async (data) => {
+      if (!data.webhookUrl) {
+        clipboardError.textContent = 'Please set up webhook URL first';
+        clipboardError.style.display = 'block';
+        return;
+      }
+  
+      const formData = new FormData();
+      const payload = {
+        username: data.username || 'Webhook Sender',
+        content: clipboardType === 'text' ? clipboardContent : 'Shared clipboard image:'
+      };
+  
+      if (clipboardType === 'image') {
+        formData.append('payload_json', JSON.stringify(payload));
+        formData.append('files[]', clipboardContent, 'clipboard-image.png');
+  
+        try {
+          const response = await fetch(data.webhookUrl, {
+            method: 'POST',
+            body: formData
+          });
+  
+          if (!response.ok) throw new Error('Failed to send image');
+          
+          clipboardStatus.style.display = 'block';
+          setTimeout(() => {
+            clipboardStatus.style.display = 'none';
+            clipboardPreview.style.display = 'none';
+            shareClipboardButton.style.display = 'none';
+            clipboardContent = null;
+            clipboardType = null;
+          }, 3000);
+        } catch (error) {
+          clipboardError.textContent = 'Failed to share image';
+          clipboardError.style.display = 'block';
+          setTimeout(() => {
+            clipboardError.style.display = 'none';
+          }, 3000);
+        }
+      } else if (clipboardType === 'text') {
+        try {
+          const response = await fetch(data.webhookUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+          });
+  
+          if (!response.ok) throw new Error('Failed to send text');
+  
+          clipboardStatus.style.display = 'block';
+          setTimeout(() => {
+            clipboardStatus.style.display = 'none';
+            clipboardPreview.style.display = 'none';
+            shareClipboardButton.style.display = 'none';
+            clipboardContent = null;
+            clipboardType = null;
+          }, 3000);
+        } catch (error) {
+          clipboardError.textContent = 'Failed to share text';
+          clipboardError.style.display = 'block';
+          setTimeout(() => {
+            clipboardError.style.display = 'none';
+          }, 3000);
+        }
+      }
+    });
+  });
 });

@@ -307,6 +307,13 @@
           </svg>
           <p>Upload Files</p>
         </div>
+        <div class="share-option" data-option="clipboard">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M15 2H9a1 1 0 0 0-1 1v2a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V3a1 1 0 0 0-1-1z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          <p>Clipboard</p>
+        </div>
       </div>
 
       <div class="share-content">
@@ -331,6 +338,30 @@
           <button id="upload-files">Upload Files</button>
           <div id="upload-status" class="status">Files uploaded successfully!</div>
           <div id="upload-error" class="error"></div>
+        </div>
+
+        <div id="clipboard-share">
+          <div id="paste-area" class="upload-area">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M15 2H9a1 1 0 0 0-1 1v2a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V3a1 1 0 0 0-1-1z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            <p>Click here to paste from clipboard</p>
+          </div>
+          <div id="preview-area" style="display: none;">
+            <div class="file-item">
+              <div class="file-info">
+                <span class="file-name">Clipboard Content</span>
+                <span id="content-type" class="file-size"></span>
+              </div>
+              <button class="remove-file" id="clear-preview">Clear</button>
+            </div>
+            <div id="content-preview" style="margin-top: 12px; max-height: 200px; overflow: auto;"></div>
+          </div>
+          <textarea id="clipboard-description" placeholder="Add a description (optional)" rows="3"></textarea>
+          <button id="share-clipboard">Share Clipboard Content</button>
+          <div id="clipboard-status" class="status">Content shared successfully!</div>
+          <div id="clipboard-error" class="error"></div>
         </div>
       </div>
     </div>
