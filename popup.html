@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Discord Webhook Uploader</title>
+  <style>
+    :root {
+      --discord-primary: #5865F2;
+      --discord-secondary: #4752C4;
+      --discord-bg: #F6F6F7;
+      --discord-text: #2E3338;
+      --discord-success: #3BA55C;
+      --discord-error: #ED4245;
+      --discord-input-bg: #FFFFFF;
+      --discord-border: #E3E5E8;
+    }
+
+    body {
+      width: 400px;
+      padding: 0;
+      margin: 0;
+      font-family: 'gg sans', 'Noto Sans', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+      background-color: var(--discord-bg);
+      color: var(--discord-text);
+    }
+
+    .container {
+      padding: 16px;
+    }
+
+    .header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 16px;
+      background-color: white;
+      border-bottom: 1px solid var(--discord-border);
+      margin-bottom: 16px;
+    }
+
+    .header h1 {
+      font-size: 16px;
+      font-weight: 600;
+      margin: 0;
+      color: var(--discord-text);
+    }
+
+    .header svg {
+      width: 20px;
+      height: 20px;
+      color: var(--discord-primary);
+    }
+
+    .setup-form, .share-form, .upload-form {
+      background: var(--discord-input-bg);
+      border: 1px solid var(--discord-border);
+      padding: 16px;
+      border-radius: 8px;
+      margin-bottom: 16px;
+    }
+
+    h3 {
+      font-size: 14px;
+      font-weight: 600;
+      margin: 0 0 12px 0;
+      color: var(--discord-text);
+    }
+
+    input[type='text'], textarea {
+      width: 100%;
+      padding: 10px;
+      margin: 4px 0 12px;
+      border: 1px solid var(--discord-border);
+      border-radius: 4px;
+      box-sizing: border-box;
+      font-size: 14px;
+      background: var(--discord-input-bg);
+      color: var(--discord-text);
+      transition: border-color 0.2s;
+    }
+
+    input[type='text']:focus, textarea:focus {
+      outline: none;
+      border-color: var(--discord-primary);
+    }
+
+    .upload-area {
+      border: 2px dashed var(--discord-border);
+      border-radius: 8px;
+      padding: 16px;
+      text-align: center;
+      margin-bottom: 12px;
+      cursor: pointer;
+      transition: border-color 0.2s, background-color 0.2s;
+    }
+
+    .upload-area:hover {
+      border-color: var(--discord-primary);
+      background-color: rgba(88, 101, 242, 0.05);
+    }
+
+    .upload-area svg {
+      width: 24px;
+      height: 24px;
+      color: var(--discord-primary);
+      margin-bottom: 8px;
+    }
+
+    .upload-area p {
+      margin: 0;
+      font-size: 14px;
+      color: var(--discord-text);
+    }
+
+    button {
+      background-color: var(--discord-primary);
+      color: white;
+      border: none;
+      padding: 10px 16px;
+      border-radius: 4px;
+      cursor: pointer;
+      width: 100%;
+      font-size: 14px;
+      font-weight: 500;
+      transition: background-color 0.2s;
+    }
+
+    button:hover {
+      background-color: var(--discord-secondary);
+    }
+
+    .status {
+      color: var(--discord-success);
+      font-size: 14px;
+      margin-top: 8px;
+      display: none;
+      text-align: center;
+    }
+
+    .error {
+      color: var(--discord-error);
+      font-size: 14px;
+      margin-top: 8px;
+      display: none;
+      text-align: center;
+    }
+
+    .reset-config {
+      font-size: 12px;
+      color: var(--discord-primary);
+      text-decoration: none;
+      float: right;
+      cursor: pointer;
+    }
+
+    .reset-config:hover {
+      text-decoration: underline;
+    }
+
+    .file-list {
+      margin: 12px 0;
+      max-height: 200px;
+      overflow-y: auto;
+    }
+
+    .file-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px;
+      background: var(--discord-bg);
+      border: 1px solid var(--discord-border);
+      border-radius: 4px;
+      margin-bottom: 8px;
+    }
+
+    .file-info {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex: 1;
+    }
+
+    .file-name {
+      font-size: 14px;
+      color: var(--discord-text);
+      margin-right: 8px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .file-size {
+      font-size: 12px;
+      color: #666;
+    }
+
+    .remove-file {
+      background: none;
+      border: none;
+      color: var(--discord-error);
+      cursor: pointer;
+      padding: 4px;
+      width: auto;
+      font-size: 12px;
+    }
+
+    .remove-file:hover {
+      text-decoration: underline;
+    }
+
+    .upload-progress {
+      height: 2px;
+      background: var(--discord-border);
+      margin-top: 4px;
+      border-radius: 2px;
+      overflow: hidden;
+    }
+
+    .progress-bar {
+      height: 100%;
+      background: var(--discord-primary);
+      width: 0;
+      transition: width 0.3s ease;
+    }
+
+    .share-options {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .share-option {
+      flex: 1;
+      padding: 12px;
+      border: 1px solid var(--discord-border);
+      border-radius: 8px;
+      cursor: pointer;
+      text-align: center;
+      transition: all 0.2s;
+    }
+
+    .share-option:hover {
+      border-color: var(--discord-primary);
+      background: rgba(88, 101, 242, 0.05);
+    }
+
+    .share-option.active {
+      border-color: var(--discord-primary);
+      background: rgba(88, 101, 242, 0.1);
+    }
+
+    .share-option svg {
+      width: 20px;
+      height: 20px;
+      color: var(--discord-primary);
+      margin-bottom: 8px;
+    }
+
+    .share-option p {
+      margin: 0;
+      font-size: 14px;
+      color: var(--discord-text);
+    }
+
+    .share-content > div {
+      display: none;
+    }
+
+    .share-content > div.active {
+      display: block;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M19.2 3.6H4.8C4.32261 3.6 3.86477 3.78964 3.52721 4.12721C3.18964 4.46477 3 4.92261 3 5.4V16.8C3 17.2774 3.18964 17.7352 3.52721 18.0728C3.86477 18.4104 4.32261 18.6 4.8 18.6H16.5L15.9 16.8L17.1 18L18.3 19.2L21 21.6V5.4C21 4.92261 20.8104 4.46477 20.4728 4.12721C20.1352 3.78964 19.6774 3.6 19.2 3.6ZM14.4 14.4C14.4 14.4 14.1 14.1 13.8 13.8C15.3 13.5 15.9 12.6 15.9 12.6C15.3 12.9 14.7 13.2 14.1 13.2C13.5 13.5 12.9 13.5 12.3 13.5C11.1 13.5 9.9 13.2 9 12.6C8.7 12.6 8.4 12.3 8.1 12.3C8.1 12.3 8.7 13.2 10.2 13.5C9.9 13.8 9.6 14.4 9.6 14.4C7.5 14.4 6.6 12.9 6.6 12.9C6.6 10.2 7.8 7.8 7.8 7.8C9 6.9 10.2 6.9 10.2 6.9L10.5 7.2C8.7 7.8 7.8 8.4 7.8 8.4C7.8 8.4 8.1 8.1 8.7 7.8C9.6 7.5 10.2 7.2 10.8 7.2C10.8 7.2 11.1 7.2 11.4 7.2C12.3 7.2 13.2 7.2 14.1 7.5C15 7.8 15.9 8.1 16.8 8.7C16.8 8.7 15.9 7.8 14.1 7.2L14.4 6.9C14.4 6.9 15.6 6.9 16.8 7.8C16.8 7.8 18 10.2 18 12.9C18 12.9 17.1 14.4 14.4 14.4Z" fill="currentColor"/>
+    </svg>
+    <h1>Discord Webhook Uploader</h1>
+  </div>
+
+  <div class="container">
+    <div class="setup-form">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+        <h3>Setup</h3>
+        <a id="reset-config" class="reset-config">Reset Config</a>
+      </div>
+      <input type="text" id="webhook-url" placeholder="Webhook URL" />
+      <input type="text" id="username" placeholder="Username (optional)" />
+      <button id="save-settings">Save Settings</button>
+      <div id="setup-status" class="status">Settings saved successfully!</div>
+      <div id="setup-error" class="error"></div>
+    </div>
+
+    <div class="share-form">
+      <h3>Share Content</h3>
+      <div class="share-options">
+        <div class="share-option active" data-option="url">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M13.544 10.456a4.368 4.368 0 0 0-6.176 0l-3.089 3.088a4.367 4.367 0 1 0 6.176 6.177L12 18.177M10.456 13.544a4.368 4.368 0 0 0 6.176 0l3.089-3.088a4.367 4.367 0 1 0-6.176-6.177L12 5.823" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          <p>Share Link</p>
+        </div>
+        <div class="share-option" data-option="file">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M12 15V3m0 12l-4-4m4 4l4-4M2 17l.621 2.485A2 2 0 0 0 4.561 21h14.878a2 2 0 0 0 1.94-1.515L22 17" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          <p>Upload Files</p>
+        </div>
+      </div>
+
+      <div class="share-content">
+        <div id="url-share" class="active">
+          <input type="text" id="link-url" placeholder="Enter URL to share" />
+          <textarea id="link-description" placeholder="Add a description (optional)" rows="3"></textarea>
+          <button id="share-link">Share Link</button>
+          <div id="share-status" class="status">Link shared successfully!</div>
+          <div id="share-error" class="error"></div>
+        </div>
+
+        <div id="file-share">
+          <div id="drop-area" class="upload-area">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M12 15V3m0 12l-4-4m4 4l4-4M2 17l.621 2.485A2 2 0 0 0 4.561 21h14.878a2 2 0 0 0 1.94-1.515L22 17" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            <p>Drop files here or click to upload</p>
+          </div>
+          <input type="file" id="file-input" multiple style="display: none;" />
+          <div id="file-list" class="file-list"></div>
+          <textarea id="message" placeholder="Add a message (optional)" rows="3"></textarea>
+          <button id="upload-files">Upload Files</button>
+          <div id="upload-status" class="status">Files uploaded successfully!</div>
+          <div id="upload-error" class="error"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script src="popup.js"></script>
+</body>
+</html>
