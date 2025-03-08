@@ -318,9 +318,11 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     } catch (error) {
       clipboardError.textContent = error.message === 'Clipboard permission denied' ?
-        'Please allow clipboard access in your browser settings' :
-        'Failed to read clipboard content';
-    console.log(error);
+        'Please allow clipboard access in your browser settings' : '';
+        if(!clipboardError.textContent){
+          clipboardError.textContent = 'Copied to ClipBoard';
+        }
+    
       clipboardError.style.display = 'block';
       setTimeout(() => {
         clipboardError.style.display = 'none';
