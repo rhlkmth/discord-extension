@@ -22,6 +22,48 @@
       background-color: var(--discord-bg);
       color: var(--discord-text);
     }
+    
+    .profile-selector {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+    
+    #profile-select {
+      flex: 1;
+      padding: 8px;
+      border: 1px solid var(--discord-border);
+      border-radius: 4px;
+      background: var(--discord-input-bg);
+      color: var(--discord-text);
+    }
+    
+    #edit-profile, #delete-profile {
+      padding: 8px 12px;
+      font-size: 13px;
+      width: auto;
+      background: var(--discord-bg);
+      color: var(--discord-text);
+      border: 1px solid var(--discord-border);
+    }
+    
+    #edit-profile:hover, #delete-profile:hover {
+      background: var(--discord-primary);
+      color: white;
+    }
+    
+    .profile-name-row {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+    
+    .generated-name-hint {
+      font-size: 12px;
+      color: #666;
+      white-space: nowrap;
+    }
 
     .container {
       padding: 16px;
@@ -280,10 +322,21 @@
   </div>
 
   <div class="container">
-    <div class="setup-form">
+    <div class="profile-selector">
+      <select id="profile-select">
+        <option value="new">Add New Profile</option>
+      </select>
+      <button id="edit-profile">Edit</button>
+      <button id="delete-profile">Delete</button>
+    </div>
+    <div class="setup-form" style="display: none;">
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-        <h3>Setup</h3>
+        <h3>Profile Settings</h3>
         <a id="reset-config" class="reset-config">Reset Config</a>
+      </div>
+      <div class="profile-name-row">
+        <input type="text" id="profile-name" placeholder="Profile Name (optional)" />
+        <span class="generated-name-hint">Leave blank for random name</span>
       </div>
       <input type="text" id="webhook-url" placeholder="Webhook URL" />
       <input type="text" id="username" placeholder="Username (optional)" />
